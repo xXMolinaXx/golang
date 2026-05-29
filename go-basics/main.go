@@ -4,7 +4,6 @@ import "fmt"
 import "example/example/utils"
 
 
-
 func main() {
     mynotDefinedVariable := "Hello, World!" 
     var myVariable string = "Hello, World!"
@@ -66,5 +65,17 @@ func main() {
     }
     fmt.Println(people[0].Name) // "Juan"
     fmt.Println(e) // "Valencia"
-    // Llamada a un método asociado al struct
+
+
+    // these function ocurrus when the end, defer is used to execute a function after the main function has finished, even if there is a panic(error), recover give us the ability to handle the panic and prevent the program from crashing
+    defer func(){
+        fmt.Println("This is a function that will cause a panic due to division by zero")
+        r:= recover() // recover captura el panic y permite manejarlo sin que el programa se detenga
+        if r != nil {
+            fmt.Println("Recovered from panic:", r)
+        }
+    }()
+    utils.ExecError()
+    utils.PanicExample()
+    
 }
