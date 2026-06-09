@@ -1,36 +1,36 @@
 package utils
 
 import (
-	"errors"
+	// "errors"
 	"fmt"
 )
 
 func ExecError() {
+    // Defer function to recover from panic
+    // this will be called when the function returns, either normally or through a panic
+    // recover() is a built-in function that regains control of a panicking goroutine. It can only be used inside deferred functions. During normal execution, a call to recover() will return nil and have no other effect. If the current goroutine is panicking, a call to recover() will capture the value given to panic() and resume normal execution.
 	defer func(){
         fmt.Println("defer call in ExecError")
-        
+        error := recover()
+        if error != nil {
+            fmt.Println("Recovered from panic:", error)
+        }
     }()
-	// Llamada a un método asociado al struct
-    /*********************************************/
-    /*********************************************/ 
-    // NOTE: ERROR
-    /*********************************************/ 
-    /*********************************************/ 
-    var err error
-    err = errors.New("This is an error")
-    fmt.Println(err)
-    // imprimir error a tipo string
-    fmt.Println(err.Error())
-    err2 := fmt.Errorf("This is another error: %s", "something went wrong")
-    fmt.Println(err2)
-    
-    x:= 4
-    y:= 0
-    z := x / y
+    var valueX int
+    var valueY int
+    fmt.Println("Enter value for x:")
+    fmt.Scanln(&valueX)
+    fmt.Println("Enter value for y:")
+    fmt.Scanln(&valueY)
+    if valueY == 0 {
+        panic("division by zero")
+    }
+    z := valueX / valueY
     fmt.Println("Result of division:", z)
-    
-}
-// this is a throw error example, it will cause a panic and the program will crash if not handled
-func PanicExample() {
-	panic("This is a panic example")
+    // var err error
+    // err = errors.New("This is an error")
+    // fmt.Println(err)
+    // fmt.Println(err.Error())
+    // err2 := fmt.Errorf("This is another error: %s", "something went wrong")
+    // fmt.Println(err2)
 }
