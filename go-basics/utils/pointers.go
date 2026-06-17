@@ -7,6 +7,7 @@ func PointerExample(){
     var x int = 10
 	// Assign the address of x to the pointer
     intPointer = &x
+	intPointer2 := &10
 	// Dereference the pointer to get the value
     fmt.Println(*intPointer) // 10
 	// Change the value through the pointer
