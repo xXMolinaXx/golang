@@ -2,13 +2,11 @@ package main
 
 import (
 	"log"
-	"os"
-	"rest/api/src/user"
+	"rest/api/internal/user"
+	"rest/api/pkg/bootstrap"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 func main() {
@@ -16,14 +14,10 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	databaseName := os.Getenv("DATABASE_NAME")
-	db, err := gorm.Open(sqlite.Open(databaseName), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database")
+	db, errDb := bootstrap.DBConnection()
+	if errDb != nil {
+		log.Fatal("Error connecting to the database")
 	}
-	db = db.Debug()
-	// Migrate the schema
-	db.AutoMigrate(&user.User{})
 	r := gin.Default()
 	userRepo := user.NewUserRepository(db)
 	userService := user.NewUserService(userRepo)
@@ -33,5 +27,5 @@ func main() {
 	r.GET("/users", userEndpoints.GetAllUsers)
 	r.PUT("/users/:id", userEndpoints.UpdateUser)
 	r.DELETE("/users/:id", userEndpoints.DeleteUser)
-	r.Run()
+	r.Run(":3000")
 }

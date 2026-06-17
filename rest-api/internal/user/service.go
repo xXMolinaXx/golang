@@ -1,9 +1,5 @@
 package user
 
-import (
-	"github.com/google/uuid"
-)
-
 type Service interface {
 	CreateUser(name, email, password string) error
 	ReadUser(id string) (*User, error)
@@ -22,7 +18,6 @@ func NewUserService(db Repository) *UserService {
 
 func (s *UserService) CreateUser(name, email, password string) error {
 	user := User{
-		Id:       uuid.New().String(),
 		Fullname: name,
 		Email:    email,
 		Password: password,
