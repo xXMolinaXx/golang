@@ -1,14 +1,16 @@
 package user
 
 import (
+	"rest/api/internal/domain"
+
 	"gorm.io/gorm"
 )
 
 type Repository interface {
-	CreateUser(user *User) error
-	ReadUser(id string) (*User, error)
-	ReadAllUsers() ([]User, error)
-	UpdateUser(user *User) error
+	CreateUser(user *domain.User) error
+	ReadUser(id string) (*domain.User, error)
+	ReadAllUsers() ([]domain.User, error)
+	UpdateUser(user *domain.User) error
 	DeleteUser(id string) error
 }
 
@@ -20,12 +22,12 @@ func NewUserRepository(db *gorm.DB) Repository {
 	return &repo{db: db}
 }
 
-func (r *repo) CreateUser(user *User) error {
+func (r *repo) CreateUser(user *domain.User) error {
 	err := r.db.Create(user).Error
 	return err
 }
-func (r *repo) ReadUser(id string) (*User, error) {
-	var user User
+func (r *repo) ReadUser(id string) (*domain.User, error) {
+	var user domain.User
 	err := r.db.First(&user, "id = ?", id).Error
 	if err != nil {
 		return nil, err
@@ -33,8 +35,8 @@ func (r *repo) ReadUser(id string) (*User, error) {
 	return &user, nil
 
 }
-func (r *repo) ReadAllUsers() ([]User, error) {
-	var users []User
+func (r *repo) ReadAllUsers() ([]domain.User, error) {
+	var users []domain.User
 	err := r.db.Find(&users).Error
 	if err != nil {
 		return nil, err
@@ -42,12 +44,12 @@ func (r *repo) ReadAllUsers() ([]User, error) {
 	return users, nil
 }
 
-func (r *repo) UpdateUser(user *User) error {
+func (r *repo) UpdateUser(user *domain.User) error {
 	err := r.db.Save(user).Error
 	return err
 }
 
 func (r *repo) DeleteUser(id string) error {
-	err := r.db.Delete(&User{}, "id = ?", id).Error
+	err := r.db.Delete(&domain.User{}, "id = ?", id).Error
 	return err
 }

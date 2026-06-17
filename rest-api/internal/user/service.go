@@ -1,10 +1,14 @@
 package user
 
+import (
+	"rest/api/internal/domain"
+)
+
 type Service interface {
 	CreateUser(name, email, password string) error
-	ReadUser(id string) (*User, error)
-	ReadAllUsers() ([]User, error)
-	UpdateUser(user *User) error
+	ReadUser(id string) (*domain.User, error)
+	ReadAllUsers() ([]domain.User, error)
+	UpdateUser(user *domain.User, requestBody CreateUserRequest) error
 	DeleteUser(id string) error
 }
 
@@ -17,7 +21,7 @@ func NewUserService(db Repository) *UserService {
 }
 
 func (s *UserService) CreateUser(name, email, password string) error {
-	user := User{
+	user := domain.User{
 		Fullname: name,
 		Email:    email,
 		Password: password,
@@ -26,13 +30,13 @@ func (s *UserService) CreateUser(name, email, password string) error {
 	return err
 }
 
-func (s *UserService) ReadUser(id string) (*User, error) {
+func (s *UserService) ReadUser(id string) (*domain.User, error) {
 	return s.db.ReadUser(id)
 }
-func (s *UserService) ReadAllUsers() ([]User, error) {
+func (s *UserService) ReadAllUsers() ([]domain.User, error) {
 	return s.db.ReadAllUsers()
 }
-func (s *UserService) UpdateUser(user *User, requestBody CreateUserRequest) error {
+func (s *UserService) UpdateUser(user *domain.User, requestBody CreateUserRequest) error {
 	user.Fullname = requestBody.Name
 	user.Email = requestBody.Email
 	user.Password = requestBody.Password

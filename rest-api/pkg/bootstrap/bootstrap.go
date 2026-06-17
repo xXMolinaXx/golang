@@ -2,7 +2,7 @@ package bootstrap
 
 import (
 	"os"
-	"rest/api/internal/user"
+	"rest/api/internal/domain"
 
 	"gorm.io/driver/sqlite"
 
@@ -21,7 +21,7 @@ func DBConnection() (*gorm.DB, error) {
 	}
 
 	if os.Getenv("DATABASE_MIGRATE") == "true" {
-		if err := db.AutoMigrate(&user.User{}); err != nil {
+		if err := db.AutoMigrate(&domain.User{}); err != nil {
 			return nil, err
 		}
 	}
