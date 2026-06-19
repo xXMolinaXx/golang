@@ -13,9 +13,14 @@ type (
 		GetAllUsers gin.HandlerFunc
 		UpdateUser  gin.HandlerFunc
 		DeleteUser  gin.HandlerFunc
+		Login       gin.HandlerFunc
 	}
 	CreateUserRequest struct {
 		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	LoginRequest struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
@@ -31,6 +36,7 @@ func MakeEndPoint(s *UserService) EndPoint {
 		GetAllUsers: getAllUsers(s),
 		UpdateUser:  updateUser(s),
 		DeleteUser:  deleteUser(s),
+		Login:       login(s),
 	}
 }
 
@@ -38,15 +44,19 @@ func createUser(s *UserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var requestBody CreateUserRequest
 		if err := c.ShouldBindJSON(&requestBody); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Failed to parse JSON"})
+			c.JSON(http.StatusBadRequest, ErrorResponse{Message: err.Error()})
 			return
 		}
 		if requestBody.Name == "" || requestBody.Email == "" {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Name and Email are required"})
 			return
 		}
+		if requestBody.Password == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Password is required"})
+			return
+		}
 		if err := s.CreateUser(requestBody.Name, requestBody.Email, requestBody.Password); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Failed to create user"})
+			c.JSON(http.StatusBadRequest, ErrorResponse{Message: err.Error()})
 			return
 		}
 		c.JSON(http.StatusCreated, gin.H{"message": "User created successfully"})
@@ -117,5 +127,25 @@ func deleteUser(s *UserService) gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+	}
+}
+
+func login(s *UserService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var requestBody LoginRequest
+		if err := c.ShouldBindJSON(&requestBody); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Message: err.Error()})
+			return
+		}
+		if requestBody.Email == "" || requestBody.Password == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Email and Password are required"})
+			return
+		}
+		user, token, refreshToken, err := s.Login(requestBody.Email, requestBody.Password)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{Message: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"user": user, "token": token, "refreshToken": refreshToken})
 	}
 }

@@ -2,7 +2,8 @@ package bootstrap
 
 import (
 	"os"
-	"rest/api/internal/domain"
+
+	"github.com/xXMolinaXx/golang/internal/domain"
 
 	"gorm.io/driver/sqlite"
 
