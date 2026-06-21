@@ -16,6 +16,7 @@ type User struct {
 	Fullname  string     `json:"fullname" gorm:"type:varchar(255);not null"`
 	Email     string     `json:"email" gorm:"type:varchar(255);not null;unique"`
 	Password  string     `json:"-" gorm:"type:varchar(255);not null"`
+	Todos     []Todo     `json:"todos,omitempty" gorm:"foreignKey:UserId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	CreatedAt *time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt *time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }

@@ -38,6 +38,13 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		c.Set("userClaims", claims)
+		userID, ok := claims["id"].(string)
+		if !ok || userID == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid user id in token"})
+			c.Abort()
+			return
+		}
+		c.Set("userId", userID)
 		c.Next()
 	}
 }

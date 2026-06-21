@@ -26,9 +26,9 @@ func NewUserService(db Repository, hashService security.HashService, jwtService 
 	return &UserService{db: db, hashService: hashService, jwtService: jwtService} // crea la variable y retorna un puntero
 }
 
-func (s *UserService) CreateUser(name, email, password string) error {
+func (s *UserService) CreateUser(name, email, password string) (string, error) {
 	if password == "" {
-		return fmt.Errorf("password is required")
+		return "", fmt.Errorf("password is required")
 	}
 
 	user := domain.User{
@@ -36,7 +36,15 @@ func (s *UserService) CreateUser(name, email, password string) error {
 		Email:    email,
 		Password: password,
 	}
-	return s.db.CreateUser(&user)
+
+	if err := s.db.CreateUser(&user); err != nil {
+		return "", err
+	}
+	token, err := s.jwtService.GenerateToken(user.Email, user.Fullname, user.Id, false)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
 
 func (s *UserService) ReadUser(id string) (*domain.User, error) {
@@ -63,11 +71,11 @@ func (s *UserService) Login(email, password string) (*domain.User, string, strin
 	if !s.hashService.CheckPasswordHash(password, user.Password) {
 		return nil, "", "", fmt.Errorf("invalid email or password")
 	}
-	token, err := s.jwtService.GenerateToken(user.Email, user.Fullname, false)
+	token, err := s.jwtService.GenerateToken(user.Email, user.Fullname, user.Id, false)
 	if err != nil {
 		return nil, "", "", err
 	}
-	refreshToken, err := s.jwtService.GenerateToken(user.Email, user.Fullname, true)
+	refreshToken, err := s.jwtService.GenerateToken(user.Email, user.Fullname, user.Id, true)
 	if err != nil {
 		return nil, "", "", err
 	}

@@ -55,11 +55,12 @@ func createUser(s *UserService) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Password is required"})
 			return
 		}
-		if err := s.CreateUser(requestBody.Name, requestBody.Email, requestBody.Password); err != nil {
+		res, err := s.CreateUser(requestBody.Name, requestBody.Email, requestBody.Password)
+		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Message: err.Error()})
 			return
 		}
-		c.JSON(http.StatusCreated, gin.H{"message": "User created successfully"})
+		c.JSON(http.StatusCreated, gin.H{"token": res})
 	}
 }
 
@@ -141,11 +142,11 @@ func login(s *UserService) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Email and Password are required"})
 			return
 		}
-		user, token, refreshToken, err := s.Login(requestBody.Email, requestBody.Password)
+		_, token, _, err := s.Login(requestBody.Email, requestBody.Password)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Message: err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"user": user, "token": token, "refreshToken": refreshToken})
+		c.JSON(http.StatusOK, gin.H{"token": token})
 	}
 }

@@ -11,7 +11,7 @@ import (
 
 type (
 	Ijwt interface {
-		GenerateToken(email, username string, refresh bool) (string, error)
+		GenerateToken(email, username, id string, refresh bool) (string, error)
 		ValidateToken(tokenString string, refresh bool) (jwt.MapClaims, error)
 	}
 	jwtImpl struct{}
@@ -23,7 +23,7 @@ func NewJwtImpl() Ijwt {
 
 const tokenIssuer = "rest-api"
 
-func (j *jwtImpl) GenerateToken(email, username string, refresh bool) (string, error) {
+func (j *jwtImpl) GenerateToken(email, username, id string, refresh bool) (string, error) {
 
 	jwtKey := os.Getenv("PASSWORD_TOKEN") // Asegúrate de configurar esta variable de entorno
 	tokenType := "access"
@@ -42,6 +42,7 @@ func (j *jwtImpl) GenerateToken(email, username string, refresh bool) (string, e
 		"iss":      tokenIssuer,
 		"type":     tokenType,
 		"username": username,
+		"id":       id,
 	}
 	// Crear el token con el método de firma HS256
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
