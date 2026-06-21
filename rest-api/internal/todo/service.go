@@ -10,8 +10,8 @@ type Service interface {
 	CreateTodo(title, description, userId string) error
 	ReadTodo(id, userId string) (*domain.Todo, error)
 	ReadAllTodos() ([]domain.Todo, error)
-	UpdateTodo(todo *domain.Todo, requestBody CreateTodoRequest) error
-	DeleteTodo(id string) error
+	UpdateTodo(todo *domain.Todo) error
+	DeleteTodo(id, userId string) error
 }
 
 type TodoService struct {
@@ -45,15 +45,9 @@ func (s *TodoService) ReadTodo(id, userId string) (*domain.Todo, error) {
 func (s *TodoService) ReadAllTodos() ([]domain.Todo, error) {
 	return s.db.ReadAllTodos()
 }
-func (s *TodoService) UpdateTodo(todo *domain.Todo, requestBody CreateTodoRequest) error {
-	todo.Title = requestBody.Title
-	todo.Description = requestBody.Description
-	if requestBody.UserId != "" {
-		todo.UserId = requestBody.UserId
-	}
-
+func (s *TodoService) UpdateTodo(todo *domain.Todo) error {
 	return s.db.UpdateTodo(todo)
 }
-func (s *TodoService) DeleteTodo(id string) error {
-	return s.db.DeleteTodo(id)
+func (s *TodoService) DeleteTodo(id, userId string) error {
+	return s.db.DeleteTodo(id, userId)
 }

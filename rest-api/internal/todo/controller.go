@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/xXMolinaXx/golang/internal/domain"
 )
 
 type (
@@ -85,6 +86,8 @@ func readAllTodos(s *TodoService) gin.HandlerFunc {
 func updateTodo(s *TodoService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var requestBody CreateTodoRequest
+		todoId := c.Param("id")
+		userId := c.GetString("userId")
 		if err := c.ShouldBindJSON(&requestBody); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Message: err.Error()})
 			return
@@ -93,29 +96,27 @@ func updateTodo(s *TodoService) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Title and Description are required"})
 			return
 		}
-		if err := s.CreateTodo(requestBody.Title, requestBody.Description, requestBody.UserId); err != nil {
+		if err := s.UpdateTodo(&domain.Todo{
+			Id:          todoId,
+			Title:       requestBody.Title,
+			Description: requestBody.Description,
+			UserId:      userId,
+		}); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Message: err.Error()})
 			return
 		}
-		c.JSON(http.StatusCreated, gin.H{"message": "Todo created successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "Todo updated successfully"})
 	}
 }
 
 func deleteTodo(s *TodoService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var requestBody CreateTodoRequest
-		if err := c.ShouldBindJSON(&requestBody); err != nil {
+		todoId := c.Param("id")
+		userId := c.GetString("userId")
+		if err := s.DeleteTodo(todoId, userId); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Message: err.Error()})
 			return
 		}
-		if requestBody.Title == "" || requestBody.Description == "" {
-			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Title and Description are required"})
-			return
-		}
-		if err := s.CreateTodo(requestBody.Title, requestBody.Description, requestBody.UserId); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{Message: err.Error()})
-			return
-		}
-		c.JSON(http.StatusCreated, gin.H{"message": "Todo created successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "Todo deleted successfully"})
 	}
 }

@@ -11,7 +11,7 @@ type Repository interface {
 	ReadTodo(id, userId string) (*domain.Todo, error)
 	ReadAllTodos() ([]domain.Todo, error)
 	UpdateTodo(todo *domain.Todo) error
-	DeleteTodo(id string) error
+	DeleteTodo(id, userId string) error
 }
 
 type repo struct {
@@ -45,11 +45,15 @@ func (r *repo) ReadAllTodos() ([]domain.Todo, error) {
 }
 
 func (r *repo) UpdateTodo(todo *domain.Todo) error {
-	err := r.db.Save(todo).Error
+	var todoFound domain.Todo
+	err := r.db.Model(&todoFound).Where("id = ? AND user_id = ?", todo.Id, todo.UserId).Updates(map[string]interface{}{
+		"title":       todo.Title,
+		"description": todo.Description,
+	}).Error
 	return err
 }
 
-func (r *repo) DeleteTodo(id string) error {
-	err := r.db.Delete(&domain.Todo{}, "id = ?", id).Error
+func (r *repo) DeleteTodo(id, userId string) error {
+	err := r.db.Delete(&domain.Todo{}, "id = ? AND user_id = ?", id, userId).Error
 	return err
 }
