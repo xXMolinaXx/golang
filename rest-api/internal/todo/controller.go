@@ -2,6 +2,7 @@ package todo
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/xXMolinaXx/golang/internal/domain"
@@ -38,6 +39,7 @@ func MakeEndPoint(s *TodoService) EndPoint {
 func createTodo(s *TodoService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var requestBody CreateTodoRequest
+		var todo domain.Todo
 		userID := c.GetString("userId")
 		if userID == "" {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Message: "user id not found in token"})
@@ -51,11 +53,12 @@ func createTodo(s *TodoService) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Title and Description are required"})
 			return
 		}
-		if err := s.CreateTodo(requestBody.Title, requestBody.Description, userID); err != nil {
+		todo, err := s.CreateTodo(requestBody.Title, requestBody.Description, userID)
+		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Message: err.Error()})
 			return
 		}
-		c.JSON(http.StatusCreated, gin.H{"message": "Todo created successfully"})
+		c.JSON(http.StatusCreated, todo)
 	}
 }
 
@@ -74,12 +77,38 @@ func readTodo(s *TodoService) gin.HandlerFunc {
 
 func readAllTodos(s *TodoService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		todos, err := s.ReadAllTodos()
+		pageStr := c.Query("page")
+		limitStr := c.Query("limit")
+		if pageStr == "" && limitStr == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Pagination is not implemented yet"})
+			return
+		}
+		page, err := strconv.Atoi(pageStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Invalid page value"})
+			return
+		}
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Invalid limit value"})
+			return
+		}
+		todos, total, err := s.ReadAllTodos(TodoFilter{
+			Page:  int(page),
+			Limit: int(limit),
+		})
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Message: err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, todos)
+		c.JSON(http.StatusOK, gin.H{
+			"todos": todos,
+			"meta:": gin.H{
+				"page":  page,
+				"limit": limit,
+				"total": total,
+			},
+		})
 	}
 }
 
@@ -96,16 +125,17 @@ func updateTodo(s *TodoService) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Title and Description are required"})
 			return
 		}
-		if err := s.UpdateTodo(&domain.Todo{
+		payload := domain.Todo{
 			Id:          todoId,
 			Title:       requestBody.Title,
 			Description: requestBody.Description,
 			UserId:      userId,
-		}); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{Message: err.Error()})
+		}
+		if err := s.UpdateTodo(payload); err != nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Message: "Forbidden"})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"message": "Todo updated successfully"})
+		c.JSON(http.StatusOK, payload)
 	}
 }
 
@@ -117,6 +147,6 @@ func deleteTodo(s *TodoService) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Message: err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"message": "Todo deleted successfully"})
+		c.Status(http.StatusNoContent)
 	}
 }

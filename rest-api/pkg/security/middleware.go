@@ -18,21 +18,21 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		const bearerPrefix = "Bearer "
 		if !strings.HasPrefix(authHeader, bearerPrefix) {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "authorization header must start with Bearer"})
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
 			c.Abort()
 			return
 		}
 
 		tokenString := strings.TrimSpace(strings.TrimPrefix(authHeader, bearerPrefix))
 		if tokenString == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "token is required"})
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
 			c.Abort()
 			return
 		}
 		newJwt := NewJwtImpl()
 		claims, err := newJwt.ValidateToken(tokenString, false)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
 			c.Abort()
 			return
 		}
@@ -40,7 +40,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Set("userClaims", claims)
 		userID, ok := claims["id"].(string)
 		if !ok || userID == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid user id in token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
 			c.Abort()
 			return
 		}
