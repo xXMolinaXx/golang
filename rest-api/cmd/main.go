@@ -53,7 +53,7 @@ func main() {
 	// Public endpoints
 	r.POST("/register", userEndpoints.CreateUser)
 	r.POST("/login", userEndpoints.Login)
-
+	r.POST("/refresh-token", userEndpoints.RefreshToken)
 	// Protected endpoints
 	protected := r.Group("/", mw)
 	protected.Use(security.AuthMiddleware())

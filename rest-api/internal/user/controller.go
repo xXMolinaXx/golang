@@ -8,12 +8,13 @@ import (
 
 type (
 	EndPoint struct {
-		CreateUser  gin.HandlerFunc
-		GetUser     gin.HandlerFunc
-		GetAllUsers gin.HandlerFunc
-		UpdateUser  gin.HandlerFunc
-		DeleteUser  gin.HandlerFunc
-		Login       gin.HandlerFunc
+		CreateUser   gin.HandlerFunc
+		GetUser      gin.HandlerFunc
+		GetAllUsers  gin.HandlerFunc
+		UpdateUser   gin.HandlerFunc
+		DeleteUser   gin.HandlerFunc
+		Login        gin.HandlerFunc
+		RefreshToken gin.HandlerFunc
 	}
 	CreateUserRequest struct {
 		Name     string `json:"name"`
@@ -24,6 +25,9 @@ type (
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
+	RefreshTokenRequest struct {
+		Token string `json:"token"`
+	}
 	ErrorResponse struct {
 		Message string `json:"message"`
 	}
@@ -31,12 +35,13 @@ type (
 
 func MakeEndPoint(s *UserService) EndPoint {
 	return EndPoint{
-		CreateUser:  createUser(s),
-		GetUser:     getUser(s),
-		GetAllUsers: getAllUsers(s),
-		UpdateUser:  updateUser(s),
-		DeleteUser:  deleteUser(s),
-		Login:       login(s),
+		CreateUser:   createUser(s),
+		GetUser:      getUser(s),
+		GetAllUsers:  getAllUsers(s),
+		UpdateUser:   updateUser(s),
+		DeleteUser:   deleteUser(s),
+		Login:        login(s),
+		RefreshToken: refreshToken(s),
 	}
 }
 
@@ -142,11 +147,31 @@ func login(s *UserService) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Email and Password are required"})
 			return
 		}
-		_, token, _, err := s.Login(requestBody.Email, requestBody.Password)
+		_, token, refreshToken, err := s.Login(requestBody.Email, requestBody.Password)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Message: err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"token": token})
+		c.JSON(http.StatusOK, gin.H{"token": token, "refreshToken": refreshToken})
+	}
+}
+
+func refreshToken(s *UserService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var requestBody RefreshTokenRequest
+		if err := c.ShouldBindJSON(&requestBody); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Failed to parse JSON"})
+			return
+		}
+		if requestBody.Token == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Message: "Refresh token is required"})
+			return
+		}
+		refreshToken, newToken, err := s.RefreshToken(requestBody.Token)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{Message: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"token": newToken, "refreshToken": refreshToken})
 	}
 }

@@ -24,7 +24,7 @@ func NewJwtImpl() Ijwt {
 const tokenIssuer = "rest-api"
 
 func (j *jwtImpl) GenerateToken(email, username, id string, refresh bool) (string, error) {
-
+	fmt.Println("Generating token for:", email, username, id, "refresh:", refresh)
 	jwtKey := os.Getenv("PASSWORD_TOKEN") // Asegúrate de configurar esta variable de entorno
 	tokenType := "access"
 	if refresh {
@@ -34,7 +34,7 @@ func (j *jwtImpl) GenerateToken(email, username, id string, refresh bool) (strin
 	if jwtKey == "" {
 		return "", errors.New("jwt key is not configured")
 	}
-
+	fmt.Println("JWT Key:", jwtKey) // Imprime la clave para depuración
 	// Definir los claims
 	claims := jwt.MapClaims{
 		"email":    email,

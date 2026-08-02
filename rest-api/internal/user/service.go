@@ -2,6 +2,7 @@ package user
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/xXMolinaXx/golang/internal/domain"
 	"github.com/xXMolinaXx/golang/pkg/security"
@@ -14,6 +15,7 @@ type Service interface {
 	UpdateUser(user *domain.User, requestBody CreateUserRequest) error
 	DeleteUser(id string) error
 	Login(email, password string) (*domain.User, string, string, error)
+	RefreshToken(user *domain.User) (string, string, error)
 }
 
 type UserService struct {
@@ -80,4 +82,36 @@ func (s *UserService) Login(email, password string) (*domain.User, string, strin
 		return nil, "", "", err
 	}
 	return user, token, refreshToken, nil
+}
+func (s *UserService) RefreshToken(refreshToken string) (string, string, error) {
+	claims, err := s.jwtService.ValidateToken(refreshToken, true)
+	if err != nil {
+		return "", "", err
+	}
+
+	email, ok := claims["email"].(string)
+	if !ok {
+		return "", "", fmt.Errorf("email claim is not a string")
+	}
+
+	name, ok := claims["username"].(string)
+	if !ok {
+		return "", "", fmt.Errorf("name claim is not a string")
+	}
+
+	var idStr string
+	switch v := claims["id"].(type) {
+	case string:
+		idStr = v
+	case float64:
+		idStr = strconv.Itoa(int(v))
+	default:
+		return "", "", fmt.Errorf("id claim has unexpected type %T", v)
+	}
+
+	token, err := s.jwtService.GenerateToken(email, name, idStr, false)
+	if err != nil {
+		return "", "", err
+	}
+	return refreshToken, token, nil
 }
