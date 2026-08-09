@@ -18,23 +18,38 @@ type cachedUrl struct {
 var originURL string
 var alreadyCached []cachedUrl
 
-func findIndex(slice []cachedUrl, url string) int {
-	for i, v := range slice {
-		if v.URL == url {
-			if time.Now().Before(v.resetCache) {
-				return i
-			}
+func CleanupCache() {
+	now := time.Now()
+	var cleanCache []cachedUrl
+
+	for _, v := range alreadyCached {
+		if now.Before(v.resetCache) {
+			cleanCache = append(cleanCache, v)
 		}
 	}
-	return -1
+
+	alreadyCached = cleanCache
+
+}
+func findIndex(url string) int {
+	CleanupCache()
+	foundIndex := -1
+
+	for index, v := range alreadyCached {
+		if foundIndex == -1 && v.URL == url {
+			foundIndex = index
+		}
+	}
+	return foundIndex
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	// fmt.Printf("Received request for %s %s\nContent-Type: %s\nAccept: %s\nQuery: %s\n", r.URL.Path, r.Method, r.Header.Get("Content-Type"), r.Header.Get("Accept"), r.URL.Query().Encode())
 	if originURL == "" {
 		http.Error(w, "origin flag is required", http.StatusBadRequest)
 		return
 	}
-	valueCachedFound := findIndex(alreadyCached, r.URL.Path)
+	valueCachedFound := findIndex(r.URL.Path)
 
 	if valueCachedFound != -1 {
 		w.Header().Set("Content-Type", "application/json")
@@ -45,8 +60,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	req, err := http.NewRequest(r.Method, originURL+r.URL.Path, r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
 
-	resp, err := http.Get(originURL + r.URL.Path)
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
