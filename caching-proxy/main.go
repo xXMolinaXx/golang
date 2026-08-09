@@ -21,10 +21,9 @@ var alreadyCached []cachedUrl
 func findIndex(slice []cachedUrl, url string) int {
 	for i, v := range slice {
 		if v.URL == url {
-			if time.Now().After(v.resetCache) {
-				return -1
+			if time.Now().Before(v.resetCache) {
+				return i
 			}
-			return i
 		}
 	}
 	return -1
