@@ -1,9 +1,68 @@
-## Importación de paquetes en Go
+# Apuntes de Go
 
-En Go, puedes importar diferentes tipos de paquetes:
+Este archivo agrupa los conceptos clave, ejemplos y comandos útiles para trabajar con proyectos en Go.
+
+## Índice
+
+- [Crear un módulo](#crear-un-módulo)
+- [Estructura básica](#estructura-básica)
+- [Cómo ejecutar código](#cómo-ejecutar-código)
+- [Importación de paquetes](#importación-de-paquetes)
+- [Comandos básicos del CLI de Go](#comandos-básicos-del-cli-de-go)
+- [Buenas prácticas](#buenas-prácticas)
+
+## Crear un módulo
+
+1. En la raíz del proyecto, ejecuta:
+
+```sh
+go mod init nombre/del/modulo
+```
+
+2. Esto crea el archivo `go.mod`.
+3. Para mantener las dependencias limpias y actualizadas:
+
+```sh
+go mod tidy
+```
+
+> Tip: Si cambias el nombre del módulo o mueves archivos, revisa `go.mod` y usa `go mod tidy`.
+
+## Estructura básica
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hola, Go!")
+}
+```
+
+- `package main` define un ejecutable.
+- La función `main` es el punto de entrada.
+- Si el paquete no es `main`, se construye como librería y no se ejecuta directamente.
+
+## Cómo ejecutar código
+
+- `go run archivo.go` - ejecuta un solo archivo Go.
+- `go run .` - ejecuta el paquete actual desde el directorio donde está `go.mod`.
+- `go run ./...` - ejecuta todos los paquetes dentro del módulo.
+- `go build` - compila el paquete actual y genera un ejecutable local.
+- `go build -o nombrePrograma` - compila y escribe el binario con el nombre indicado.
+- `./nombrePrograma` - ejecuta el binario ya compilado.
+- `go test ./...` - ejecuta todas las pruebas del módulo.
+- `go test ./ruta/al/paquete` - ejecuta las pruebas de un paquete específico.
+
+> Nota: `go run .` es el comando más práctico cuando trabajas en un proyecto con varios archivos dentro de un mismo paquete.
+
+## Importación de paquetes
+
+En Go existen tres tipos principales de paquetes:
 
 ### 1. Paquetes estándar
-Son los que vienen con Go, como `fmt`, `os`, `math`, etc.
+Vienen con Go, como `fmt`, `os`, `math`, `time`.
 
 ```go
 import "fmt"
@@ -19,82 +78,51 @@ Supón que tu módulo se llama `example/example` y tienes un archivo en `utils/a
 import "example/example/utils"
 ```
 
-Luego puedes usar las funciones exportadas de ese paquete:
+Entonces puedes usarlo así:
 
 ```go
 res := utils.Add(2, 3)
 ```
 
 ### 3. Paquetes de terceros
-Son paquetes externos que instalas con `go get`.
-
-Ejemplo:
+Se instalan con `go get` o se agregan automáticamente al compilar si ya están en `go.mod`.
 
 ```sh
 go get github.com/gorilla/mux
 ```
 
-Luego los importas así:
-
 ```go
 import "github.com/gorilla/mux"
 ```
 
-### Notas
+### Notas sobre imports
 - Los imports deben ir después de la declaración del paquete.
-- Si importas pero no usas un paquete, Go dará error.
+- Si importas un paquete y no lo usas, Go fallará en la compilación.
 - Puedes usar alias para evitar conflictos:
 
 ```go
 import m "github.com/gorilla/mux"
 ```
-# Apuntes de Go
 
-Este repositorio está dedicado a tomar apuntes, ejemplos y conceptos clave sobre el lenguaje de programación Go (Golang). Aquí encontrarás ejemplos prácticos, explicaciones y fragmentos de código útiles para repasar y aprender Go.
+## Comandos básicos del CLI de Go
 
-## Conceptos importantes de Go
+- `go mod init nombre/del/modulo` - inicializa el módulo y crea `go.mod`.
+- `go mod tidy` - agrega dependencias usadas y elimina las no usadas.
+- `go get paquete@versión` - descarga o actualiza un paquete.
+- `go list ./...` - muestra los paquetes del módulo.
+- `go fmt ./...` - formatea todos los archivos Go en el módulo.
+- `go env GOPATH` - muestra el valor de `GOPATH`.
+- `go env GOMOD` - muestra la ruta al archivo `go.mod`.
+- `go clean` - limpia los archivos generados por compilación.
+- `go install ./...` - compila e instala los paquetes en `GOBIN`.
+- `go vet ./...` - analiza el código en busca de problemas comunes.
+- `go test ./...` - ejecuta las pruebas del módulo.
 
-### Público y privado
-- En Go, los identificadores (variables, funciones, structs, etc.) que comienzan con mayúscula son **públicos** (exportados).
-- Los que comienzan con minúscula son **privados** (no exportados fuera del paquete).
+## Buenas prácticas
 
-```go
-type Persona struct { // Público
-	Nombre string // Público
-	edad   int    // Privado
-}
-
-func Sumar(a, b int) int { // Pública
-	return a + b
-}
-
-func restar(a, b int) int { // Privada
-	return a - b
-}
-```
-
-### Crear un módulo
-1. Ejecuta `go mod init nombre/del/modulo` en la raíz del proyecto.
-2. Esto crea el archivo `go.mod`.
-
-### Importar paquetes
-```go
-import "fmt"
-import "mi/modulo/utils"
-```
-
-### Estructura básica de un programa Go
-```go
-package main
-
-import "fmt"
-
-func main() {
-	fmt.Println("Hola, Go!")
-}
-```
-
-### Otras notas
-- Los archivos deben pertenecer a un paquete (`package nombre` al inicio).
-- El punto de entrada es la función `main` en el paquete `main`.
-- Go fomenta la simplicidad y la claridad en el código.
+- Mantén una sola responsabilidad por paquete.
+- Usa nombres claros y exporta solo lo necesario.
+- `go fmt` y `go vet` son pasos rápidos que ayudan a mantener el código limpio.
+- No uses paquetes innecesarios: `go mod tidy` ayuda a limpiar dependencias.
+- Prefiere `go run .` cuando trabajas con proyectos que tienen múltiples archivos en el mismo paquete.
+- Para proyectos más grandes, organiza el código en subpaquetes bajo el módulo.
