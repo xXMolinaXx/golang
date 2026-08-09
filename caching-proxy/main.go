@@ -21,6 +21,9 @@ var alreadyCached []cachedUrl
 func findIndex(slice []cachedUrl, url string) int {
 	for i, v := range slice {
 		if v.URL == url {
+			if time.Now().After(v.resetCache) {
+				return -1
+			}
 			return i
 		}
 	}
@@ -44,7 +47,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := http.Get(originURL)
+	resp, err := http.Get(originURL + r.URL.Path)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
