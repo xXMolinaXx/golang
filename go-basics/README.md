@@ -126,3 +126,8 @@ import m "github.com/gorilla/mux"
 - No uses paquetes innecesarios: `go mod tidy` ayuda a limpiar dependencias.
 - Prefiere `go run .` cuando trabajas con proyectos que tienen múltiples archivos en el mismo paquete.
 - Para proyectos más grandes, organiza el código en subpaquetes bajo el módulo.
+
+
+## LINK ÚTIL
+- [Documentación oficial de Go](https://golang.org/doc/)
+- [Paquete net/http](https://pkg.go.dev/net/http)
