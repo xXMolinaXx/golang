@@ -7,41 +7,12 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/xXMolinaXx/golang/caching-proxy/cache"
 )
 
-type cachedUrl struct {
-	URL        string
-	CacheValue []byte
-	resetCache time.Time
-}
-
 var originURL string
-var alreadyCached []cachedUrl
-
-func CleanupCache() {
-	now := time.Now()
-	var cleanCache []cachedUrl
-
-	for _, v := range alreadyCached {
-		if now.Before(v.resetCache) {
-			cleanCache = append(cleanCache, v)
-		}
-	}
-
-	alreadyCached = cleanCache
-
-}
-func findIndex(url string) int {
-	CleanupCache()
-	foundIndex := -1
-
-	for index, v := range alreadyCached {
-		if foundIndex == -1 && v.URL == url {
-			foundIndex = index
-		}
-	}
-	return foundIndex
-}
+var alreadyCached []cache.CachedUrl
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Printf("Received request for %s %s\nContent-Type: %s\nAccept: %s\nQuery: %s\n", r.URL.Path, r.Method, r.Header.Get("Content-Type"), r.Header.Get("Accept"), r.URL.Query().Encode())
@@ -49,7 +20,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "origin flag is required", http.StatusBadRequest)
 		return
 	}
-	valueCachedFound := findIndex(r.URL.Path)
+	valueCachedFound := cache.FindIndex(&alreadyCached, r.URL.Path)
 
 	if valueCachedFound != -1 {
 		w.Header().Set("Content-Type", "application/json")
@@ -80,7 +51,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	alreadyCached = append(alreadyCached, cachedUrl{URL: r.URL.Path, CacheValue: body, resetCache: time.Now().Add(10 * time.Second)})
+	alreadyCached = append(alreadyCached, cache.CachedUrl{URL: r.URL.Path, CacheValue: body, ResetCache: time.Now().Add(10 * time.Second)})
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Cache", "MISS")
